@@ -10,8 +10,8 @@ import (
 	hcplugin "github.com/hashicorp/go-plugin"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/stripe/stripe-cli-go-plugin-bootstrap/v2/pkg/config"
-	"github.com/stripe/stripe-cli-go-plugin-bootstrap/v2/pkg/telemetry"
+	"github.com/stripe/stripe-cli-go-plugin-bootstrap/v3/pkg/config"
+	"github.com/stripe/stripe-cli-go-plugin-bootstrap/v3/pkg/telemetry"
 	"github.com/stripe/stripe-cli/pkg/ansi"
 	cliconfig "github.com/stripe/stripe-cli/pkg/config"
 	cliplugin "github.com/stripe/stripe-cli/pkg/plugins"
@@ -87,6 +87,45 @@ func (p *PluginImplGRPC) RunCommand(additionalInfo *proto.AdditionalInfo, args [
 	}
 }
 
+var currentCoreCLIHelper cliplugin.CoreCLIHelper
+
+// GetCoreCLIHelper returns the CoreCLIHelper provided by the host CLI.
+// Returns nil if the plugin was invoked via v1/v2 protocol or in dev mode.
+func GetCoreCLIHelper() cliplugin.CoreCLIHelper {
+	return currentCoreCLIHelper
+}
+
+type PluginImplV3 struct {
+}
+
+func (p *PluginImplV3) RunCommand(additionalInfo *proto.AdditionalInfo, args []string, coreCLIHelper cliplugin.CoreCLIHelper) error {
+	currentCoreCLIHelper = coreCLIHelper
+
+	ctx, cancel := context.WithCancel(context.Background())
+	interruptCh := make(chan os.Signal, 1)
+	signal.Notify(interruptCh, os.Interrupt, syscall.SIGINT)
+	errCh := make(chan error, 1)
+
+	ansi.HostStdoutIsTerminal = additionalInfo.GetIsTerminal().GetStdout()
+	ansi.HostStderrIsTerminal = additionalInfo.GetIsTerminal().GetStderr()
+
+	go func() {
+		<-interruptCh
+		cancel()
+	}()
+
+	go func() {
+		errCh <- rootCmdExecute(args)
+	}()
+
+	select {
+	case <-ctx.Done():
+		return nil
+	case err := <-errCh:
+		return err
+	}
+}
+
 // GetStripeCLIConfig returns a pointer to the CLI config that plugins can reference.
 func GetStripeCLIConfig() *cliconfig.Config {
 	return &stripeCliConfig
@@ -134,14 +173,15 @@ func StartPlugin(bc *Config, cmdExecute func(args []string, ctx context.Context)
 			MagicCookieValue: bc.HandshakeValue,
 		}
 
-		// versionedPluginSetMap is the map of interfaces we can dispense from the plugin itself
-		// we just have one called "main" for each of our plugins for now
 		versionedPluginSetMap := map[int]hcplugin.PluginSet{
 			1: {
 				"main": &cliplugin.CLIPluginV1{Impl: &PluginImpl{}},
 			},
 			2: {
 				"main": &cliplugin.CLIPluginGRPC{Impl: &PluginImplGRPC{}},
+			},
+			3: {
+				"main": &cliplugin.CLIPluginV3{Impl: &PluginImplV3{}},
 			},
 		}
 

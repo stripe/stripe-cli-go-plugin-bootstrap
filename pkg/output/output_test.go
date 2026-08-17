@@ -28,8 +28,6 @@ type fakeHelper struct {
 	err     error
 }
 
-func (h *fakeHelper) SendMessage(*proto.SendMessageRequest) error { return h.err }
-
 func (h *fakeHelper) SendCommandOutput(req *proto.SendCommandOutputRequest) error {
 	h.outputs = append(h.outputs, req)
 	return h.err

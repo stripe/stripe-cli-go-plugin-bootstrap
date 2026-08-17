@@ -46,14 +46,6 @@ func (m *mockCoreCLIHelper) RunPeerPlugin(pluginName string, args []string, cwd 
 	return nil
 }
 
-func (m *mockCoreCLIHelper) SendMessage(req *proto.SendMessageRequest) error {
-	return nil
-}
-
-func (m *mockCoreCLIHelper) SendProgress(req *proto.SendProgressRequest) error {
-	return nil
-}
-
 func (m *mockCoreCLIHelper) SendCommandOutput(req *proto.SendCommandOutputRequest) error {
 	return nil
 }

@@ -46,6 +46,22 @@ func (m *mockCoreCLIHelper) RunPeerPlugin(pluginName string, args []string, cwd 
 	return nil
 }
 
+func (m *mockCoreCLIHelper) SendMessage(req *proto.SendMessageRequest) error {
+	return nil
+}
+
+func (m *mockCoreCLIHelper) SendProgress(req *proto.SendProgressRequest) error {
+	return nil
+}
+
+func (m *mockCoreCLIHelper) SendCommandOutput(req *proto.SendCommandOutputRequest) error {
+	return nil
+}
+
+func (m *mockCoreCLIHelper) Prompt(req *proto.PromptRequest) (*proto.PromptResponse, error) {
+	return &proto.PromptResponse{}, nil
+}
+
 func TestGetCoreCLIHelperNilByDefault(t *testing.T) {
 	currentCoreCLIHelper = nil
 	assert.Nil(t, GetCoreCLIHelper())

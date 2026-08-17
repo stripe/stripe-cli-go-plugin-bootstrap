@@ -95,11 +95,19 @@ func GetCoreCLIHelper() cliplugin.CoreCLIHelper {
 	return currentCoreCLIHelper
 }
 
+// SetCoreCLIHelper records the helper for the command about to run.
+//
+// The v3 entry point calls this; plugins can also use it in tests to exercise
+// their output code against a fake helper without a host CLI.
+func SetCoreCLIHelper(helper cliplugin.CoreCLIHelper) {
+	currentCoreCLIHelper = helper
+}
+
 type PluginImplV3 struct {
 }
 
 func (p *PluginImplV3) RunCommand(additionalInfo *proto.AdditionalInfo, args []string, coreCLIHelper cliplugin.CoreCLIHelper) error {
-	currentCoreCLIHelper = coreCLIHelper
+	SetCoreCLIHelper(coreCLIHelper)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	interruptCh := make(chan os.Signal, 1)

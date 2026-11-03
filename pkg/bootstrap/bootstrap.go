@@ -126,6 +126,18 @@ func (p *PluginImplV3) RunCommand(additionalInfo *proto.AdditionalInfo, args []s
 	}
 }
 
+// PostInstall is called by hosts that support it after the plugin is installed or upgraded.
+// Plugins built with this bootstrap have no install hooks, so this is a no-op.
+func (p *PluginImplV3) PostInstall(additionalInfo *proto.AdditionalInfo, version string, previousVersion string, coreCLIHelper cliplugin.CoreCLIHelper) error {
+	return nil
+}
+
+// PreUninstall is called by hosts that support it before the plugin is uninstalled.
+// Plugins built with this bootstrap have no uninstall hooks, so this is a no-op.
+func (p *PluginImplV3) PreUninstall(additionalInfo *proto.AdditionalInfo, version string, coreCLIHelper cliplugin.CoreCLIHelper) error {
+	return nil
+}
+
 // GetStripeCLIConfig returns a pointer to the CLI config that plugins can reference.
 func GetStripeCLIConfig() *cliconfig.Config {
 	return &stripeCliConfig
